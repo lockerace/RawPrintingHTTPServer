@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.960
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RawPrintingHTTPServer", "RawPrintingHTTPServer\RawPrintingHTTPServer.csproj", "{C7669C47-4914-4000-AA6A-679021061F89}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "RawPrintingHTTPServerSetup", "RawPrintingHTTPServerSetup\RawPrintingHTTPServerSetup.vdproj", "{7C683E1D-02A1-4C67-B27C-480C43DF840F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C7669C47-4914-4000-AA6A-679021061F89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7669C47-4914-4000-AA6A-679021061F89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7669C47-4914-4000-AA6A-679021061F89}.Debug|x86.ActiveCfg = Debug|x86
+		{C7669C47-4914-4000-AA6A-679021061F89}.Debug|x86.Build.0 = Debug|x86
+		{C7669C47-4914-4000-AA6A-679021061F89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7669C47-4914-4000-AA6A-679021061F89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7669C47-4914-4000-AA6A-679021061F89}.Release|x86.ActiveCfg = Release|x86
+		{C7669C47-4914-4000-AA6A-679021061F89}.Release|x86.Build.0 = Release|x86
+		{7C683E1D-02A1-4C67-B27C-480C43DF840F}.Debug|Any CPU.ActiveCfg = Debug
+		{7C683E1D-02A1-4C67-B27C-480C43DF840F}.Debug|x86.ActiveCfg = Debug
+		{7C683E1D-02A1-4C67-B27C-480C43DF840F}.Release|Any CPU.ActiveCfg = Release
+		{7C683E1D-02A1-4C67-B27C-480C43DF840F}.Release|x86.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E473706E-02B7-44C8-A60A-8D9261F639BF}
+	EndGlobalSection
+EndGlobal
