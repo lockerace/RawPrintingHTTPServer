@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace RawPrintingHTTPServer
 {
+    enum ResponseCode {
+        OK = 0,
+        NotFound = 1,
+        Forbidden = 2
+    }
     class RawPrintingHTTPServer
     {
         private HttpListener _listener;
@@ -86,7 +91,7 @@ namespace RawPrintingHTTPServer
                             }
                             else
                             {
-                                if (req.Url.AbsolutePath == "/permissions")
+                                if (req.Url.AbsolutePath == "/permissions" && req.HttpMethod == "GET")
                                 {
                                     resp.AppendHeader("Access-Control-Allow-Origin", origin);
                                 } else
@@ -108,41 +113,44 @@ namespace RawPrintingHTTPServer
                                 {
                                     accesslog += "\tfailed\tsame origin";
                                     ServerConfig.appendLog(accesslog);
-                                    resp.StatusCode = (int)HttpStatusCode.Forbidden;
-                                    resp.StatusDescription = "FORBIDDEN";
-                                    resp.Close();
+                                    responseForbidden(resp);
                                 }
                                 else
                                 {
-                                    bool is404 = false;
+                                    ResponseCode respCode = ResponseCode.OK;
                                     if (req.Url.AbsolutePath == "/")
                                     {
-                                        is404 = _home.handle(req, resp, accesslog);
+                                        respCode = _home.handle(req, resp, accesslog);
                                     }
                                     else if (req.Url.AbsolutePath == "/permissions")
                                     {
-                                        is404 = _permissions.handle(req, resp, accesslog, origin);
+                                        respCode = _permissions.handle(req, resp, accesslog, origin);
                                     }
                                     else if (req.Url.AbsolutePath == "/printers")
                                     {
-                                        is404 = _printers.handle(req, resp, accesslog);
+                                        respCode = _printers.handle(req, resp, accesslog);
                                     }
                                     else if (req.Url.AbsolutePath == "/settings")
                                     {
-                                        is404 = _settings.handle(req, resp, accesslog);
+                                        respCode = _settings.handle(req, resp, accesslog);
                                     }
                                     else
                                     {
-                                        is404 = true;
+                                        respCode = ResponseCode.NotFound;
                                     }
 
-                                    if (is404)
+                                    switch(respCode)
                                     {
-                                        accesslog += "\tfailed\tnot found";
-                                        ServerConfig.appendLog(accesslog);
-                                        resp.StatusCode = (int)HttpStatusCode.NotFound;
-                                        resp.StatusDescription = "NOT FOUND";
-                                        resp.Close();
+                                        case ResponseCode.NotFound:
+                                            accesslog += "\tfailed\tnot found";
+                                            ServerConfig.appendLog(accesslog);
+                                            resp.StatusCode = (int)HttpStatusCode.NotFound;
+                                            resp.StatusDescription = "NOT FOUND";
+                                            resp.Close();
+                                            break;
+                                        case ResponseCode.Forbidden:
+                                            responseForbidden(resp);
+                                            break;
                                     }
                                 }
                             }
@@ -212,6 +220,13 @@ namespace RawPrintingHTTPServer
                     _task = null;
                 }
             }
+        }
+
+        public void responseForbidden(HttpListenerResponse resp)
+        {
+            resp.StatusCode = (int)HttpStatusCode.Forbidden;
+            resp.StatusDescription = "FORBIDDEN";
+            resp.Close();
         }
 
         public void response(HttpListenerResponse resp, byte[] data, string contentType)

@@ -16,7 +16,7 @@ namespace RawPrintingHTTPServer.handlers
             this.server = server;
         }
 
-        public bool handle(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
+        public ResponseCode handle(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
         {
             if (req.HttpMethod == "POST")
             {
@@ -24,50 +24,50 @@ namespace RawPrintingHTTPServer.handlers
             }
             else
             {
-                return true;
+                return ResponseCode.NotFound;
             }
         }
 
-        private bool _handlePost(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
+        private ResponseCode _handlePost(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
         {
-            if (req.HasEntityBody)
+            if (!req.HasEntityBody)
             {
-                SettingsResponse settingsresp = new SettingsResponse();
-                try
+                return ResponseCode.NotFound;
+            }
+
+            SettingsResponse settingsresp = new SettingsResponse();
+            try
+            {
+                using (Stream body = req.InputStream)
                 {
-                    using (Stream body = req.InputStream)
+                    Encoding encoding = req.ContentEncoding;
+                    using (StreamReader reader = new StreamReader(body, encoding))
                     {
-                        Encoding encoding = req.ContentEncoding;
-                        using (StreamReader reader = new StreamReader(body, encoding))
+                        string json = reader.ReadToEnd();
+                        SettingsPostBody newSettings = ServerConfig.fromJSON<SettingsPostBody>(json);
+                        body.Close();
+                        reader.Close();
+
+                        if (newSettings.testingMode != server.config.testingMode)
                         {
-                            string json = reader.ReadToEnd();
-                            SettingsPostBody newSettings = ServerConfig.fromJSON<SettingsPostBody>(json);
-                            body.Close();
-                            reader.Close();
-
-                            if (newSettings.testingMode != server.config.testingMode) {
-                                server.config.testingMode = newSettings.testingMode;
-                            }
-
-                            accesslog += "\tsuccess";
-                            ServerConfig.appendLog(accesslog);
-                            settingsresp.success = true;
+                            server.config.testingMode = newSettings.testingMode;
                         }
+
+                        accesslog += "\tsuccess";
+                        ServerConfig.appendLog(accesslog);
+                        settingsresp.success = true;
                     }
                 }
-                catch (Exception e)
-                {
-                    settingsresp.success = false;
-                    accesslog += "\tfailed";
-                    ServerConfig.appendLog(accesslog);
-                }
-                server.responseJSON(resp, settingsresp);
             }
-            else
+            catch (Exception e)
             {
-                return true;
+                ServerConfig.appendLog("Error: " + e.Message + "\n" + e.StackTrace);
+                settingsresp.success = false;
+                accesslog += "\tfailed";
+                ServerConfig.appendLog(accesslog);
             }
-            return false;
+            server.responseJSON(resp, settingsresp);
+            return ResponseCode.OK;
         }
     }
 }
