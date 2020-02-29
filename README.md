@@ -1,7 +1,32 @@
 # Raw Printing HTTP Server
- Simple HTTP Server to send binary data from browser (javascript) to client local printer. It supports ESC/POS codes and works well with Generic/Text Only Driver. It supports all browser that has XHR implementation.
+ Simple HTTP Server to send binary data from browser (javascript) to client local or network printer. It supports ESC/POS codes and works well with Generic/Text Only Driver. It supports all browser that has XHR implementation.
+ 
+## How It Works
+<pre>
+      Cloud (API)
+  
+           &#x2193;   send Print Document (Base64 String)
+
+        Browser
+        
+           &#x2193;   Relay the print document
+           
+Raw Printing HTTP Server
+
+           &#x2193;   Convert Base64 to byte array then send
+
+Local or Network Printer
+</pre>
+
+## Installation
+* Download the zip package [here](https://github.com/lockerace/RawPrintingHTTPServer/releases/latest)
+* Extract the zip package
+* Run setup.exe
+* Follow the steps
+* Run Raw Printing HTTP Server from Start (Auto start whenever user sign in)
+
 ## Configurations
-Config file will be in the same directory you install the service named `config.json`.
+Config file will be in `%PROGRAMDATA%\lockerace\RawPrintingHTTPServer` named `config.json`.
 parameters :
 * allowedDomains: string[] => list of allowed origin domains (please include protocol & port)
 * port: int => port number to listen (default: 9100)
@@ -16,7 +41,7 @@ example :
     "port": 9100
 }
 ```
-## Paths :
+## Endpoints :
 * GET `/` => view current status of the server and remove already allowed domains via GUI
 response :
     * type: `html`
@@ -31,6 +56,15 @@ response :
     * example :
 `{ "machineName" : "Somebody-PC", "printers" : ["Microsoft XPS Document Writer", "Fax"] }`
 
+* GET `/permissions` => check whether origin allowed to print
+
+   response :
+   * type: `json`
+   * values:
+      * allowed: boolean => whether origin allowed to print or not
+   * example :
+   `{ "allowed": true }`
+
 * GET `/permissions` => ask local user permission to allow requested domain to print
 
    query parameters :
@@ -39,20 +73,6 @@ response :
    response :
    * type: `html`
    * description: dialog with 2 buttons, allow and block
-
-* POST `/permissions` => add/remove allowed domain origin to print
-
-   accept: `json`
-
-   body parameters :
-   * host: string (required) => domain origin that will be allowed to print which include protocol & port. e.g.: `http://localhost:4200`
-   * status: string (required) => valid status values :
-      * `allow`
-      * `remove`
-
-   response :
-   * type: `html`
-   * description: script to close allow origin dialog opened at GET `/permission`
 
 * POST `/` => send print job information to printer
 
