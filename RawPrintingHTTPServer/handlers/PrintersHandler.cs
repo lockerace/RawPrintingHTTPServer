@@ -13,7 +13,7 @@ namespace RawPrintingHTTPServer.handlers
             this.server = server;
         }
 
-        public bool handle(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
+        public ResponseCode handle(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
         {
             if (req.HttpMethod == "GET")
             {
@@ -21,11 +21,11 @@ namespace RawPrintingHTTPServer.handlers
             }
             else
             {
-                return true;
+                return ResponseCode.NotFound;
             }
         }
         
-        private bool _handleGet(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
+        private ResponseCode _handleGet(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
         {
             MachineInfoResponse packet = new MachineInfoResponse
             {
@@ -35,7 +35,7 @@ namespace RawPrintingHTTPServer.handlers
 
             ServerConfig.appendLog(accesslog);
             server.responseJSON(resp, packet);
-            return false;
+            return ResponseCode.OK;
         }
     }
 }

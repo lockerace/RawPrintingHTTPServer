@@ -18,7 +18,9 @@ namespace RawPrintingHTTPServer.handlers
 
         private bool WritePrintJobFile(string printjobname, byte[] bindata)
         {
-            string filePath = ServerConfig.basePath + "\\" + printjobname + ".prn";
+            string replaceSlashWith = "_";
+            string sanitized = printjobname.Replace("\\", replaceSlashWith).Replace("/", replaceSlashWith);
+            string filePath = ServerConfig.basePath + "\\" + sanitized + ".prn";
             using (FileStream sw = new FileStream(filePath, FileMode.Create))
             {
                 sw.Write(bindata, 0, bindata.Length);
@@ -26,7 +28,7 @@ namespace RawPrintingHTTPServer.handlers
             return true;
         }
 
-        public bool handle(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
+        public ResponseCode handle(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
         {
             if (req.HttpMethod == "POST")
             {
@@ -38,65 +40,67 @@ namespace RawPrintingHTTPServer.handlers
             }
             else
             {
-                return true;
+                return ResponseCode.NotFound;
             }
         }
 
-        private bool _handlePost(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
+        private ResponseCode _handlePost(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
         {
-            if (req.HasEntityBody)
+            if (!req.HasEntityBody)
             {
-                PrintJobResponse printjobresp = new PrintJobResponse();
-                try
+                return ResponseCode.NotFound;
+            }
+
+            PrintJobResponse printjobresp = new PrintJobResponse();
+            try
+            {
+                using (Stream body = req.InputStream)
                 {
-                    using (Stream body = req.InputStream)
+                    Encoding encoding = req.ContentEncoding;
+                    using (StreamReader reader = new StreamReader(body, encoding))
                     {
-                        Encoding encoding = req.ContentEncoding;
-                        using (StreamReader reader = new StreamReader(body, encoding))
+                        string json = reader.ReadToEnd();
+                        PrintJobPostBody printjob = ServerConfig.fromJSON<PrintJobPostBody>(json);
+                        body.Close();
+                        reader.Close();
+
+                        byte[] bindata = printjob.DataToByteArray();
+
+                        bool success = false;
+                        if (server.config.testingMode == 1)
                         {
-                            string json = reader.ReadToEnd();
-                            PrintJobPostBody printjob = ServerConfig.fromJSON<PrintJobPostBody>(json);
-                            body.Close();
-                            reader.Close();
-
-                            byte[] bindata = printjob.DataToByteArray();
-
-                            bool success = false;
-                            if (server.config.testingMode == 1)
-                            {
-                                success = WritePrintJobFile(printjob.id, bindata);
-                            } else if (server.config.testingMode == 0)
-                            {
-                                success = RawPrintingHelper.SendBytesToPrinter(printjob.printer, bindata, printjob.id);
-                            } else
-                            {
-                                success = RawPrintingHelper.SendBytesToPrinter(printjob.printer, bindata, printjob.id) && WritePrintJobFile(printjob.id, bindata);
-                            }
-
-                            accesslog += "\tsuccess\t" + printjob.id + "\t" + printjob.printer;
-                            ServerConfig.appendLog(accesslog);
-                            printjobresp.success = true;
-                            printjobresp.data = printjob.id;
+                            success = WritePrintJobFile(printjob.id, bindata);
                         }
+                        else if (server.config.testingMode == 0)
+                        {
+                            success = RawPrintingHelper.SendBytesToPrinter(printjob.printer, bindata, printjob.id);
+                        }
+                        else
+                        {
+                            success = RawPrintingHelper.SendBytesToPrinter(printjob.printer, bindata, printjob.id) && WritePrintJobFile(printjob.id, bindata);
+                        }
+
+                        accesslog += "\tsuccess\t" + printjob.id + "\t" + printjob.printer;
+                        ServerConfig.appendLog(accesslog);
+                        printjobresp.success = true;
+                        printjobresp.data = printjob.id;
                     }
                 }
-                catch (Exception e)
-                {
-                    printjobresp.success = false;
-                    printjobresp.data = e.Message;
-                    accesslog += "\tfailed";
-                    ServerConfig.appendLog(accesslog);
-                }
-                server.responseJSON(resp, printjobresp);
             }
-            else
+            catch (Exception e)
             {
-                return true;
+                ServerConfig.appendLog("Error: " + e.Message + "\n" + e.StackTrace);
+                printjobresp.success = false;
+                printjobresp.data = "";
+                accesslog += "\tfailed";
+                ServerConfig.appendLog(accesslog);
             }
-            return false;
+            server.responseJSON(resp, printjobresp);
+
+            return ResponseCode.OK;
         }
 
-        private bool _handleGet(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
+        private ResponseCode _handleGet(HttpListenerRequest req, HttpListenerResponse resp, string accesslog)
         {
             string html = "<html>";
             html += "<head><style>";
@@ -185,7 +189,7 @@ namespace RawPrintingHTTPServer.handlers
             html += "</html>";
             ServerConfig.appendLog(accesslog);
             server.responseHTML(resp, html);
-            return false;
+            return ResponseCode.OK;
         }
     }
 }
