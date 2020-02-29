@@ -119,7 +119,6 @@
             this.Name = "Form1";
             this.ShowInTaskbar = false;
             this.Text = "Raw Printing HTTP Server";
-            this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.contextMenuStrip1.ResumeLayout(false);

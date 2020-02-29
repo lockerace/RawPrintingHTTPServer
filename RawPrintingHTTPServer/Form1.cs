@@ -59,7 +59,7 @@ namespace RawPrintingHTTPServer
 
         private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            WindowState = FormWindowState.Normal;
+            Show();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -80,7 +80,7 @@ namespace RawPrintingHTTPServer
                 stop();
             } else
             {
-                WindowState = FormWindowState.Minimized;
+                Hide();
                 e.Cancel = true;
             }
         }

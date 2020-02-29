@@ -13,7 +13,10 @@ namespace RawPrintingHTTPServer
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Form1 frm = new Form1();
+            frm.Hide();
+            frm.start();
+            Application.Run();
         }
     }
 }
